@@ -12,33 +12,22 @@ const errorClass = "mt-1 text-sm text-red-600";
 
 interface RegistrationFormProps {
   campId: string;
+  onSuccess: (participantId: string) => void;
 }
 
-export default function RegistrationForm({ campId }: RegistrationFormProps) {
+export default function RegistrationForm({ campId, onSuccess }: RegistrationFormProps) {
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
   } = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationFormSchema),
   });
 
   const mutation = useMutation({
     mutationFn: (values: RegistrationFormValues) => createRegistration({ ...values, campId }),
-    onSuccess: () => reset(),
+    onSuccess: (data) => onSuccess(data.id),
   });
-
-  if (mutation.isSuccess) {
-    return (
-      <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-green-800">
-        <h2 className="text-lg font-semibold">Anmeldung eingegangen</h2>
-        <p className="mt-1 text-sm">
-          Die Grunddaten wurden übermittelt. Die weiteren Schritte folgen in Kürze.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit((values) => mutation.mutate(values))} className="space-y-4">

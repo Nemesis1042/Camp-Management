@@ -2,7 +2,7 @@
 // Wird in Phase 1-3 um form_fields/form_responses, invoices, guardians etc. erweitert.
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -18,6 +18,18 @@ enum UserRole {
   PARENT
 }
 
+enum FormFieldType {
+  TEXT
+  TEXTAREA
+  DATE
+  NUMBER
+  EMAIL
+  PHONE
+  SELECT
+  RADIO
+  CHECKBOX
+}
+
 model Organization {
   id        String   @id @default(uuid())
   name      String
@@ -26,33 +38,80 @@ model Organization {
 }
 
 model Camp {
-  id             String       @id @default(uuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  name           String
-  startDate      DateTime
-  endDate        DateTime
+  id              String       @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  name            String
+  startDate       DateTime
+  endDate         DateTime
   maxParticipants Int?
-  createdAt      DateTime     @default(now())
+  createdAt       DateTime     @default(now())
 
-  participants   Participant[]
-  users          User[]
+  participants  Participant[]
+  users         User[]
+  formTemplates FormTemplate[]
 }
 
 model Participant {
-  id         String   @id @default(uuid())
-  campId     String
-  camp       Camp     @relation(fields: [campId], references: [id])
-  firstName  String
-  lastName   String
-  birthDate  DateTime
-  gender     String?
-  address    String?
-  phone      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(uuid())
+  campId    String
+  camp      Camp     @relation(fields: [campId], references: [id])
+  firstName String
+  lastName  String
+  birthDate DateTime
+  gender    String?
+  address   String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  // Phase 1: guardians, health_info, form_responses (dynamisch, siehe Roadmap)
+  formResponse FormResponse?
+}
+
+// Ein Camp kann mehrere Formular-Versionen haben. Neue Anmeldungen nutzen
+// immer die aktive Version; bestehende FormResponses bleiben an ihre
+// ursprüngliche Version gebunden, damit sie bei späteren Feld-Änderungen
+// lesbar bleiben (siehe Roadmap: Versionierung der form_responses).
+model FormTemplate {
+  id        String   @id @default(uuid())
+  campId    String
+  camp      Camp     @relation(fields: [campId], references: [id])
+  version   Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  fields    FormField[]
+  responses FormResponse[]
+
+  @@unique([campId, version])
+}
+
+// Schritt 1 (Grunddaten) nutzt weiterhin die festen Participant-Spalten.
+// FormField deckt die camp-konfigurierbaren Schritte 2–5 ab.
+model FormField {
+  id             String        @id @default(uuid())
+  formTemplateId String
+  formTemplate   FormTemplate  @relation(fields: [formTemplateId], references: [id])
+  step           Int
+  key            String
+  label          String
+  type           FormFieldType
+  required       Boolean       @default(false)
+  options        Json?
+  order          Int
+  createdAt      DateTime      @default(now())
+
+  @@unique([formTemplateId, key])
+}
+
+model FormResponse {
+  id             String       @id @default(uuid())
+  participantId  String       @unique
+  participant    Participant  @relation(fields: [participantId], references: [id])
+  formTemplateId String
+  formTemplate   FormTemplate @relation(fields: [formTemplateId], references: [id])
+  answers        Json
+  submittedAt    DateTime     @default(now())
 }
 
 model User {

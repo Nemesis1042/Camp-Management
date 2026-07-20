@@ -1,5 +1,6 @@
 import { PrismaClient, UserRole } from "@prisma/client";
 import bcrypt from "bcrypt";
+import { DEFAULT_FORM_FIELDS } from "../src/lib/defaultFormFields";
 
 const prisma = new PrismaClient();
 
@@ -44,6 +45,17 @@ async function main() {
       maxParticipants: 40,
     },
   });
+
+  const existingTemplate = await prisma.formTemplate.findFirst({ where: { campId: camp.id } });
+  if (!existingTemplate) {
+    await prisma.formTemplate.create({
+      data: {
+        campId: camp.id,
+        version: 1,
+        fields: { create: DEFAULT_FORM_FIELDS },
+      },
+    });
+  }
 
   console.log(`Organisation bereit: ${organization.name}`);
   console.log(`Master-Admin bereit: ${admin.email}`);

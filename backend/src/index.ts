@@ -11,9 +11,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use("/health", healthRouter);
-app.use("/auth", authRouter);
-app.use("/registrations", registrationsRouter);
+// Unter /api, damit der Vite-Dev-Proxy im Frontend (vite.config.ts) greift.
+app.use("/api/health", healthRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/registrations", registrationsRouter);
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 4000;
 app.listen(port, () => {

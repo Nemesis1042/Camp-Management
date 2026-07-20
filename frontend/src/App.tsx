@@ -1,6 +1,11 @@
 import RegistrationForm from "./features/registration/RegistrationForm";
+import AdminApp from "./features/admin/AdminApp";
 
 export default function App() {
+  if (window.location.pathname.startsWith("/admin")) {
+    return <AdminApp />;
+  }
+
   const campId = new URLSearchParams(window.location.search).get("campId");
 
   return (

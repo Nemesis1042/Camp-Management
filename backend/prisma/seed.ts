@@ -30,8 +30,24 @@ async function main() {
     },
   });
 
+  // Beispiel-Camp für lokale Tests des Anmeldeformulars, bis die
+  // Camp-Verwaltung im Admin-Dashboard existiert.
+  const camp = await prisma.camp.upsert({
+    where: { id: "00000000-0000-0000-0000-000000000002" },
+    update: {},
+    create: {
+      id: "00000000-0000-0000-0000-000000000002",
+      organizationId: organization.id,
+      name: "Sommerfreizeit 2026",
+      startDate: new Date("2026-08-03"),
+      endDate: new Date("2026-08-14"),
+      maxParticipants: 40,
+    },
+  });
+
   console.log(`Organisation bereit: ${organization.name}`);
   console.log(`Master-Admin bereit: ${admin.email}`);
+  console.log(`Test-Camp bereit: ${camp.name} (id: ${camp.id})`);
 }
 
 main()

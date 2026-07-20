@@ -5,6 +5,7 @@ import authRouter from "./routes/auth";
 import healthRouter from "./routes/health";
 import registrationsRouter from "./routes/registrations";
 import campsRouter from "./routes/camps";
+import participantsRouter from "./routes/participants";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use("/api/health", healthRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/registrations", registrationsRouter);
 app.use("/api/camps", campsRouter);
+app.use("/api/participants", participantsRouter);
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 4000;
 app.listen(port, () => {

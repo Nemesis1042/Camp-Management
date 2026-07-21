@@ -62,6 +62,7 @@ export default function CampsAdmin({ token, onLogout }: CampsAdminProps) {
                   <th className="py-2">Name</th>
                   <th className="py-2">Zeitraum</th>
                   <th className="py-2">Teilnehmer</th>
+                  <th className="py-2"></th>
                 </tr>
               </thead>
               <tbody>
@@ -75,6 +76,11 @@ export default function CampsAdmin({ token, onLogout }: CampsAdminProps) {
                     <td className="py-2">
                       {camp.participantCount}
                       {camp.maxParticipants ? ` / ${camp.maxParticipants}` : ""}
+                    </td>
+                    <td className="py-2">
+                      <a href={`/admin/camps/${camp.id}/form`} className="text-blue-600 underline">
+                        Formular bearbeiten
+                      </a>
                     </td>
                   </tr>
                 ))}

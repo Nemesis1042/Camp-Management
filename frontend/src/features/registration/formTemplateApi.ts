@@ -28,8 +28,26 @@ export interface FormTemplateResponse {
   fields: FormFieldDef[];
 }
 
+export interface FormFieldInput {
+  step: number;
+  key: string;
+  label: string;
+  type: FormFieldType;
+  required: boolean;
+  options?: string[];
+  order: number;
+}
+
 export function fetchFormTemplate(campId: string) {
   return apiFetch<FormTemplateResponse>(`/camps/${campId}/form-template`);
+}
+
+export function publishFormTemplate(campId: string, token: string, fields: FormFieldInput[]) {
+  return apiFetch<FormTemplateResponse>(`/camps/${campId}/form-template`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ fields }),
+  });
 }
 
 export function submitFormResponse(participantId: string, answers: Record<string, unknown>) {

@@ -27,6 +27,10 @@ const STEP_LABELS: Record<number, string> = {
   5: "Einwilligungen",
 };
 
+const miniLabelClass = "block text-xs font-medium uppercase tracking-wide text-gray-400";
+const miniInputClass =
+  "mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500";
+
 interface EditableField {
   localId: string;
   step: number;
@@ -142,106 +146,160 @@ export default function CampFormEditor({ campId, token }: CampFormEditorProps) {
     ]);
   }
 
+  const SaveButton = (
+    <button
+      type="button"
+      onClick={() => publishMutation.mutate(fields)}
+      disabled={publishMutation.isPending}
+      className="rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+    >
+      {publishMutation.isPending ? "Wird veröffentlicht…" : "Speichern (neue Version veröffentlichen)"}
+    </button>
+  );
+
   return (
     <div>
-      <h2 className="text-lg font-semibold text-gray-800">Formular bearbeiten (Schritte 2–5)</h2>
-      <p className="mt-1 text-sm text-gray-500">
-        Aktuelle Version: {templateQuery.data?.version}. Speichern veröffentlicht eine neue Version – bestehende
-        Anmeldungen bleiben an ihre alte Version gebunden.
-      </p>
-
-      {STEPS.map((step) => (
-        <div key={step} className="mt-6">
-          <h3 className="font-medium text-gray-800">
-            Schritt {step}: {STEP_LABELS[step]}
-          </h3>
-          <div className="mt-2 space-y-3">
-            {fields
-              .filter((field) => field.step === step)
-              .map((field) => (
-                <div key={field.localId} className="rounded-md border border-gray-200 p-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      className="rounded-md border-gray-300 text-sm shadow-sm"
-                      placeholder="Key (z. B. guardianName)"
-                      value={field.key}
-                      onChange={(event) => updateField(field.localId, { key: event.target.value })}
-                    />
-                    <input
-                      className="rounded-md border-gray-300 text-sm shadow-sm"
-                      placeholder="Label"
-                      value={field.label}
-                      onChange={(event) => updateField(field.localId, { label: event.target.value })}
-                    />
-                    <select
-                      className="rounded-md border-gray-300 text-sm shadow-sm"
-                      value={field.type}
-                      onChange={(event) =>
-                        updateField(field.localId, { type: event.target.value as FormFieldType })
-                      }
-                    >
-                      {FIELD_TYPES.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="number"
-                      className="rounded-md border-gray-300 text-sm shadow-sm"
-                      placeholder="Reihenfolge"
-                      value={field.order}
-                      onChange={(event) => updateField(field.localId, { order: Number(event.target.value) })}
-                    />
-                    {(field.type === "SELECT" || field.type === "RADIO") && (
-                      <input
-                        className="col-span-2 rounded-md border-gray-300 text-sm shadow-sm"
-                        placeholder="Optionen, kommagetrennt"
-                        value={field.optionsText}
-                        onChange={(event) => updateField(field.localId, { optionsText: event.target.value })}
-                      />
-                    )}
-                  </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                      <input
-                        type="checkbox"
-                        checked={field.required}
-                        onChange={(event) => updateField(field.localId, { required: event.target.checked })}
-                      />
-                      Pflichtfeld
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => removeField(field.localId)}
-                      className="text-sm text-red-600 underline"
-                    >
-                      Entfernen
-                    </button>
-                  </div>
-                </div>
-              ))}
-            <button type="button" onClick={() => addField(step)} className="text-sm text-blue-600 underline">
-              + Feld hinzufügen
-            </button>
-          </div>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-800">Formular bearbeiten</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Aktuelle Version: {templateQuery.data?.version}. Speichern veröffentlicht eine neue Version – bestehende
+            Anmeldungen bleiben an ihre alte Version gebunden.
+          </p>
         </div>
-      ))}
+        {SaveButton}
+      </div>
 
       {publishMutation.isError && (
-        <p className="mt-4 text-sm text-red-600">
+        <p className="mt-3 text-sm text-red-600">
           {publishMutation.error instanceof ApiError ? publishMutation.error.message : "Ein Fehler ist aufgetreten"}
         </p>
       )}
+      {publishMutation.isSuccess && (
+        <p className="mt-3 text-sm text-green-700">Neue Version {publishMutation.data?.version} veröffentlicht.</p>
+      )}
 
-      <button
-        type="button"
-        onClick={() => publishMutation.mutate(fields)}
-        disabled={publishMutation.isPending}
-        className="mt-6 rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-      >
-        {publishMutation.isPending ? "Wird veröffentlicht…" : "Speichern (neue Version veröffentlichen)"}
-      </button>
+      <div className="mt-6 space-y-6">
+        {STEPS.map((step) => {
+          const stepFields = fields.filter((field) => field.step === step);
+          return (
+            <div key={step} className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+              <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3">
+                <h3 className="font-medium text-gray-800">
+                  Schritt {step} · {STEP_LABELS[step]}
+                </h3>
+                <span className="text-xs text-gray-400">
+                  {stepFields.length} {stepFields.length === 1 ? "Feld" : "Felder"}
+                </span>
+              </div>
+
+              <div className="divide-y divide-gray-100">
+                {stepFields.length === 0 && (
+                  <p className="px-4 py-4 text-sm text-gray-400">Noch keine Felder in diesem Schritt.</p>
+                )}
+                {stepFields.map((field, index) => (
+                  <div key={field.localId} className="flex gap-3 px-4 py-4">
+                    <div className="mt-1 flex h-6 w-6 flex-none items-center justify-center rounded-full bg-gray-100 text-xs font-medium text-gray-500">
+                      {index + 1}
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                        <div className="sm:col-span-2">
+                          <label className={miniLabelClass}>Label</label>
+                          <input
+                            className={miniInputClass}
+                            placeholder="z. B. Name des Sorgeberechtigten"
+                            value={field.label}
+                            onChange={(event) => updateField(field.localId, { label: event.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className={miniLabelClass}>Key</label>
+                          <input
+                            className={miniInputClass}
+                            placeholder="guardianName"
+                            value={field.key}
+                            onChange={(event) => updateField(field.localId, { key: event.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className={miniLabelClass}>Reihenfolge</label>
+                          <input
+                            type="number"
+                            className={miniInputClass}
+                            value={field.order}
+                            onChange={(event) => updateField(field.localId, { order: Number(event.target.value) })}
+                          />
+                        </div>
+
+                        <div>
+                          <label className={miniLabelClass}>Typ</label>
+                          <select
+                            className={miniInputClass}
+                            value={field.type}
+                            onChange={(event) =>
+                              updateField(field.localId, { type: event.target.value as FormFieldType })
+                            }
+                          >
+                            {FIELD_TYPES.map((type) => (
+                              <option key={type} value={type}>
+                                {type}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {(field.type === "SELECT" || field.type === "RADIO") && (
+                          <div className="sm:col-span-3">
+                            <label className={miniLabelClass}>Optionen (kommagetrennt)</label>
+                            <input
+                              className={miniInputClass}
+                              placeholder="Nichtschwimmer, Schwimmer, Sehr guter Schwimmer"
+                              value={field.optionsText}
+                              onChange={(event) => updateField(field.localId, { optionsText: event.target.value })}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between">
+                        <label className="flex items-center gap-2 text-sm text-gray-600">
+                          <input
+                            type="checkbox"
+                            checked={field.required}
+                            onChange={(event) => updateField(field.localId, { required: event.target.checked })}
+                          />
+                          Pflichtfeld
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => removeField(field.localId)}
+                          className="text-sm text-red-600 hover:underline"
+                        >
+                          Entfernen
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="border-t border-gray-100 px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => addField(step)}
+                  className="text-sm font-medium text-blue-600 hover:underline"
+                >
+                  + Feld hinzufügen
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 flex justify-end">{SaveButton}</div>
     </div>
   );
 }
